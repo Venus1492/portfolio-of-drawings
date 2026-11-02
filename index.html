@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emma Potterill</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <nav class="site-nav">
+      <a href="#home">Emma Potterill</a>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home">
+      <h1 class="visually-hidden">Emma Potterill art</h1>
+      <canvas></canvas>
+    </section>
+
+
+    <section id="about">
+      <p>
+        im an artist yayayayay
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Minima alias possimus quia corrupti nisi asperiores
+        eum sit
+        ipsam beatae quas. Voluptas, a officiis quis ipsam dolorem sequi atque eveniet debitis!
+      </p>
+      <figure><img src="images/1.jpg" alt="start animation" width="400px"></figure>
+    </section>
+
+  </main>
+
+  <footer id="contact">
+    <form>
+      <fieldset>
+
+        <label for="fn">Full Name</label>
+        <input id="fn" type="text" name="name" placeholder="Enter your full name" required>
+
+        <label for="mail">E-mail</label>
+        <input id="mail" type="email" name="email" placeholder="Enter your e-mail" required>
+
+        <label>Subject</label>
+        <select>
+          <option value="merch">Merch</option>
+          <option value="tickets">Tickets</option>
+          <option value="releases">Releases</option>
+          <option value="concerts">Concerts</option>
+          <option value="other">Other</option>
+        </select>
+
+        <label for="query">Query</label>
+        <textarea id="query" maxlength="250" required
+          placeholder="Write your query here in a maximum of 250 characters"></textarea>
+
+        <div class="buttons">
+          <button type="submit">Enviar</button>
+          <button type="reset">Cancelar</button>
+        </div>
+
+      </fieldset>
+    </form>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+
+</html>

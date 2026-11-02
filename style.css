@@ -1,0 +1,179 @@
+/*colors 
+#FFFFFC white
+#3B3E40 grey
+#FC2A17 red
+#4BB3FD blue
+*/
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.permanent-marker-regular {
+  font-family: "Permanent Marker", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+body {
+  font-family: "DM Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+a {
+  text-decoration: none;
+  color: #3B3E40;
+}
+
+ul {
+  list-style: none;
+}
+
+
+
+/* Header: name on the left, nav on the right */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #FFFFFC34;
+  z-index: 10;
+  border-bottom: none;
+
+}
+
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  /* stacks on very narrow screens */
+  gap: 8px 24px;
+  padding: 16px 24px 12px;
+}
+
+
+
+.site-nav ul {
+  display: flex;
+  gap: 24px;
+}
+
+/* Sections stacked in order: home, about, then the footer form */
+main {
+  display: flex;
+  flex-direction: column;
+}
+
+
+canvas {
+  display: block;
+  /* removes the small gap browsers leave under canvases */
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  cursor: url("images/cursorPen.png") 10 52, crosshair;
+
+  touch-action: none;
+  /* lets touch screens draw instead of scrolling */
+  margin: 0;
+}
+
+section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  scroll-margin-top: 70px;
+  /* keeps headings clear of the sticky header */
+}
+
+#home {
+  padding-top: 0;
+
+}
+
+#about {
+  flex-direction: row;
+  /* text + image side by side... */
+  flex-wrap: wrap;
+  /* ...and stacked on small screens */
+}
+
+#about>* {
+  flex: 1 1 300px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Footer + form */
+footer {
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px;
+  scroll-margin-top: 70px;
+}
+
+form {
+  width: 100%;
+  max-width: 500px;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  background: #fff;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.buttons button {
+  flex: 1;
+}
