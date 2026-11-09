@@ -1,26 +1,29 @@
-/*colors 
-#FFFFFC white
-#3B3E40 grey
-#FC2A17 red
-#4BB3FD blue
-*/
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+/* ==========================================================================
+   Shared styles + home page.   (Gallery-only styles live in gallery.css)
+
+   Palette
+   #FFFFFC white   #3B3E40 grey   #FC2A17 red   #4BB3FD blue
+   ========================================================================== */
+
+
+/* 1. Tokens
+   ========================================================================== */
+:root {
+  --bg: #ffffff;
+  --text: #3B3E40;
+  --accent: #FC2A17;
+  --footer-bg: #161616;
+  --footer-text: #FFFFFC;
 }
 
-.permanent-marker-regular {
-  font-family: "Permanent Marker", cursive;
-  font-weight: 400;
-  font-style: normal;
+:root[data-theme="dark"] {
+  --bg: #161616;
+  --text: #FFFFFC;
 }
 
+
+/* 2. Base
+   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -31,149 +34,402 @@ html {
   scroll-behavior: smooth;
 }
 
-
 body {
+  background: var(--bg);
+  color: var(--text);
   font-family: "DM Mono", monospace;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
 a {
+  color: var(--text);
   text-decoration: none;
-  color: #3B3E40;
 }
 
 ul {
   list-style: none;
 }
 
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 24px;
+  scroll-margin-top: 70px; /* keeps content clear of the fixed header */
+}
 
 
-/* Header: name on the left, nav on the right */
+/* 3. Header / navigation
+   ========================================================================== */
 header {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  background: #FFFFFC34;
   z-index: 10;
-  border-bottom: none;
-
+  width: 100%;
+  background: color-mix(in srgb, var(--bg) 20%, transparent);
 }
 
 .site-nav {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap; /* last-resort fallback on very narrow screens */
   align-items: center;
-  flex-wrap: wrap;
-  /* stacks on very narrow screens */
+  justify-content: space-between;
   gap: 8px 24px;
   padding: 16px 24px 12px;
 }
 
-
-
 .site-nav ul {
   display: flex;
   gap: 24px;
+  font-size: 0.8em;
 }
 
-/* Sections stacked in order: home, about, then the footer form */
-main {
-  display: flex;
-  flex-direction: column;
+.site-nav a:hover,
+.theme-toggle:hover {
+  color: var(--accent);
 }
 
+.site-nav .site-name {
+  color: var(--accent);
+}
+
+.site-nav .site-name:hover {
+  color: var(--text);
+}
+
+/* The link for the section you are on is struck through */
+.site-nav li a[aria-current] {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.theme-toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+
+/* 4. Home: drawing board
+   ========================================================================== */
+#home {
+  position: relative;
+  padding: 0;
+}
 
 canvas {
   display: block;
-  /* removes the small gap browsers leave under canvases */
-  width: 100vw;
+  width: 100%;
   height: 100vh;
-  background: #fff;
+  height: 100svh;
+  background: #fff; /* inverted in dark mode (see below), which gives a near-black page */
   cursor: url("images/cursorPen.png") 10 52, crosshair;
-
-  touch-action: none;
-  /* lets touch screens draw instead of scrolling */
-  margin: 0;
+  touch-action: none; /* lets touch / pen draw instead of scroll */
 }
 
-section {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 24px;
-  scroll-margin-top: 70px;
-  /* keeps headings clear of the sticky header */
+/* On touch screens the board starts in "scroll" mode so it never traps the page.
+   The Draw button (and the nav) switch modes. See script.js. */
+canvas[data-mode="scroll"] {
+  touch-action: pan-y pinch-zoom;
 }
 
-#home {
-  padding-top: 0;
-
+:root[data-theme="dark"] canvas {
+  filter: invert(0.91);
 }
 
-#about {
-  flex-direction: row;
-  /* text + image side by side... */
-  flex-wrap: wrap;
-  /* ...and stacked on small screens */
+#home .overlay {
+  position: absolute;
+  top: 70%;
+  left: 45vw;
+  z-index: 10;
+  max-width: min(28rem, 40vw);
+  transform: translateY(-50%);
+  pointer-events: none; /* the canvas still receives mouse / touch events */
 }
 
-#about>* {
+.hint-touch {
+  display: none;
+}
+
+.draw-toggle {
+  display: none; /* touch screens only, see media query below */
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 11;
+  min-height: 44px; /* comfortable touch target */
+  padding: 10px 18px;
+  border: 1px solid currentColor;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+/* Hidden once the board is mostly off screen, so it never covers the nav */
+.draw-toggle.is-offscreen {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .draw-toggle { display: block; }
+  .hint-pointer { display: none; }
+  .hint-touch { display: inline; }
+}
+
+
+/* 5. About
+   ========================================================================== */
+.about {
+  position: relative; /* the gallery arrow is positioned against this */
+  overflow-x: clip;   /* hides the slide-in animation without creating a scroll box */
+}
+
+.about > * {
   flex: 1 1 300px;
 }
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+.tagline {
+  align-self: center;
+  max-width: 60ch;
+  font-size: clamp(1.6rem, 5.5vw + 0.5rem, 4rem);
+  font-weight: 500;
+  opacity: 0; /* revealed by script.js */
 }
 
-/* Footer + form */
+.tagline.is-visible {
+  opacity: 1;
+}
+
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(2rem, 14.5vw, 13rem);
+  width: 100%;
+}
+
+.about-figure {
+  position: relative; /* anchors the caption */
+  flex: 0 0 auto;
+  align-self: center;
+  width: min(300px, 100%);
+}
+
+.about-figure figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 100%;
+  padding: 10px 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%) rotate(180deg); /* reads bottom-to-top */
+}
+
+.blurb {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 40ch;
+  align-self: flex-start;
+  margin-top: -8rem; /* pulls the text up beside the image; adjust to taste */
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.gallery-arrow {
+  position: absolute;
+  top: 70%;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  transform: translateY(-50%);
+  transition: transform 0.3s, color 0.3s;
+}
+
+.gallery-arrow svg {
+  transition: transform 0.3s;
+}
+
+@media (hover: hover) {
+  .gallery-arrow:hover {
+    color: var(--accent);
+    transform: translateY(-50%) translateX(8px);
+  }
+
+  .gallery-arrow:hover svg {
+    transform: translateX(8px);
+  }
+}
+
+
+/* 6. Footer
+   ========================================================================== */
 footer {
   display: flex;
-  justify-content: center;
-  padding: 48px 24px;
-  scroll-margin-top: 70px;
-}
-
-form {
-  width: 100%;
-  max-width: 500px;
-}
-
-fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
   padding: 24px;
-  background: #fff;
+  background: var(--footer-bg);
+  font-size: 0.7em;
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-textarea {
-  height: 100px;
-  resize: vertical;
-}
-
-.buttons {
+footer ul {
   display: flex;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 24px;
 }
 
-.buttons button {
-  flex: 1;
+footer a,
+footer p {
+  color: var(--footer-text);
+}
+
+footer a:hover {
+  color: var(--accent);
+}
+
+
+/* 7. Responsive
+   Desktop (~1440px) is the default above. These adapt it down to 375px.
+   ========================================================================== */
+
+/* Small laptops / tablets: the arrow joins the page flow instead of floating,
+   so it can't overlap the text */
+@media (max-width: 1100px) {
+  .gallery-arrow {
+    position: static;
+    align-self: flex-end;
+    transform: none;
+  }
+
+  @media (hover: hover) {
+    .gallery-arrow:hover { transform: translateX(8px); }
+  }
+}
+
+/* Tablets and phones */
+@media (max-width: 800px) {
+  .site-nav {
+    gap: 8px 16px;
+    padding: 14px 16px 10px;
+  }
+
+  .site-nav ul {
+    gap: 14px;
+  }
+
+  .site-nav .site-name {
+    font-size: 0.85em;
+  }
+
+  #home .overlay {
+    top: 60%;
+    right: 0;
+    left: 0;
+    max-width: none;
+    text-align: center;
+  }
+
+  section {
+    padding: 20px 16px;
+  }
+
+  .about {
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 32px;
+    padding-top: 96px;
+    padding-bottom: 48px;
+  }
+
+  .about > * {
+    flex: 0 1 auto; /* no stretching on small screens */
+  }
+
+  .tagline {
+    align-self: auto;
+  }
+
+  .about-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .about-figure {
+    align-self: flex-start;
+  }
+
+  /* The rotated side caption becomes a normal line under the image */
+  .about-figure figcaption {
+    position: static;
+    padding: 8px 0 0;
+    writing-mode: horizontal-tb;
+    white-space: normal;
+    transform: none;
+  }
+
+  .blurb {
+    align-self: auto;
+    margin-top: 0;
+  }
+
+  .gallery-arrow {
+    align-self: flex-start;
+  }
+}
+
+/* Phones (375px and up) */
+@media (max-width: 480px) {
+  .gallery-arrow span {
+    font-size: 0.8rem;
+  }
+
+  footer {
+    padding: 20px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }

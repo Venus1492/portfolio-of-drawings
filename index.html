@@ -3,24 +3,27 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Emma Potterill</title>
-  <link rel="stylesheet" href="style.css">
+
+  <script src="theme.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <header>
     <nav class="site-nav">
-      <a href="#home">Emma Potterill</a>
+      <a class="site-name" href="#home">Emma Potterill</a>
       <ul>
         <li><a href="#home">Home</a></li>
         <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
         <li><a href="gallery.html">Gallery</a></li>
+        <li><button class="theme-toggle" id="theme-toggle" type="button">Theme</button></li>
       </ul>
     </nav>
   </header>
@@ -28,55 +31,47 @@
   <main>
     <section id="home">
       <h1 class="visually-hidden">Emma Potterill art</h1>
-      <canvas></canvas>
+      <canvas aria-label="Drawing board. Draw with your mouse, finger or pen."></canvas>
+      <div class="overlay">
+        <p>
+          <span class="hint-pointer">Click &amp; Drag</span>
+          <span class="hint-touch">Tap Draw to sketch</span>
+        </p>
+      </div>
+      <button class="draw-toggle" id="draw-toggle" type="button">Draw</button>
     </section>
 
+    <section class="about" id="about">
+      <p class="tagline"><span class="accent">the ugly</span> . the urban . the mundane</p>
 
-    <section id="about">
-      <p>
-        im an artist yayayayay
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Minima alias possimus quia corrupti nisi asperiores
-        eum sit
-        ipsam beatae quas. Voluptas, a officiis quis ipsam dolorem sequi atque eveniet debitis!
-      </p>
-      <figure><img src="images/1.jpg" alt="start animation" width="400px"></figure>
+      <div class="about-row">
+        <figure class="about-figure">
+          <img src="images/brutalUK.jpg" alt="UK service brutalist building">
+          <figcaption>Service station, M6 - ink, 2026</figcaption>
+        </figure>
+        <p class="blurb">I make drawings, usually in ink, of interesting buildings and cityscapes. If it's grimy, I like
+          it.</p>
+      </div>
+
+      <a class="gallery-arrow" href="gallery.html">
+        <span>Check out more this way</span>
+        <svg viewBox="0 0 48 24" width="64" height="32" fill="none" stroke="currentColor" stroke-width="2"
+          aria-hidden="true">
+          <path d="M0 12h44M34 2l10 10-10 10" />
+        </svg>
+      </a>
     </section>
-
   </main>
 
-  <footer id="contact">
-    <form>
-      <fieldset>
-
-        <label for="fn">Full Name</label>
-        <input id="fn" type="text" name="name" placeholder="Enter your full name" required>
-
-        <label for="mail">E-mail</label>
-        <input id="mail" type="email" name="email" placeholder="Enter your e-mail" required>
-
-        <label>Subject</label>
-        <select>
-          <option value="merch">Merch</option>
-          <option value="tickets">Tickets</option>
-          <option value="releases">Releases</option>
-          <option value="concerts">Concerts</option>
-          <option value="other">Other</option>
-        </select>
-
-        <label for="query">Query</label>
-        <textarea id="query" maxlength="250" required
-          placeholder="Write your query here in a maximum of 250 characters"></textarea>
-
-        <div class="buttons">
-          <button type="submit">Enviar</button>
-          <button type="reset">Cancelar</button>
-        </div>
-
-      </fieldset>
-    </form>
+  <footer>
+    <p>© 2026 Emma Potterill</p>
+    <ul>
+      <li><a href="https://www.instagram.com/emmap_art/?hl=en">Instagram</a></li>
+      <li><a href="mailto:emmapotterill@gmail.com">Contact</a></li>
+    </ul>
   </footer>
 
-  <script src="./script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 
 </html>
