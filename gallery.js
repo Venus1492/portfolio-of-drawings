@@ -1,5 +1,9 @@
-
-/* Gallery page: infinite draggable grid + full-screen viewer with a magnifier.
+/* Gallery page: infinite draggable grid + full-screen viewer.
+   Three phases, advanced by clicking:
+     1. floating gallery
+     2. click an image -> full width, scrollable, no text
+     3. click again    -> whole image with the text beside it
+     4. click again    -> back to the floating gallery
    (The theme toggle lives in theme.js.) */
 
 gsap.registerPlugin(Observer);
@@ -23,12 +27,12 @@ const img = (thumb, full, title, text) => ({
 
 const IMAGES = [
   img("brutalUK.jpg", "brutalUK.jpg", "Brutal UK", "M6 Service Station, UK. Ink on paper 2026."),
-  img("busBuilding.jpg", "busBuilding.jpg", "Bus building", "Write your text for this image here."),
-  img("carmel1.jpg", "carmel.jpg", "Carmel", "Write your text for this image here."),
-  img("carmel2.jpg", "carmel.jpg", "Carmel", "Write your text for this image here."),
-  img("port.jpg", "port.jpg", "Carmel", "Write your text for this image here."),
-  img("tibidabo.jpg", "tibidabo.jpg", "Tibidabo", "texttext."),
-  img("okupa.jpg", "okupa.jpg", "La casa Fantasma", "yeye."),
+  img("busBuilding.jpg", "busBuilding.jpg", "Bus building", "A building as seen from the bus. Barcelona . 2025."),
+  img("carmel1.jpg", "carmel.jpg", "El Carmel", "Montage of a neighbourhood . Barcelona . 2025"),
+  img("carmel2.jpg", "carmel.jpg", "El Carmel", "Montage of a neighbourhood . Barcelona . 2025"),
+  img("port.jpg", "port.jpg", "El Port", "Map of a port . Barcelona . 2025"),
+  img("tibidabo.jpg", "tibidabo.jpg", "Tibidabo", "A view of Tibidabo . Barcelona . 2025"),
+  img("okupa.jpg", "okupa.jpg", "La casa Fantasma", "Portrait of an occupied building . Barcelona . 2026"),
 ];
 
 
@@ -46,8 +50,6 @@ const MOBILE_BREAKPOINT = 700; // px: below this the grid uses 2 columns instead
 const IMG_RATIO_DESKTOP = 0.6; // thumbnail size as a share of its grid cell
 const IMG_RATIO_MOBILE = 0.75; // bigger on phones, where the cells are small
 
-const ZOOM = 2.5;     // magnifier strength (one level)
-const PAD = 32;       // lightbox stage padding, both sides. Keep in sync with gallery.css
 const DRAG_SLOP = 6;  // px a pointer may move and still count as a click / tap
 
 
@@ -55,14 +57,36 @@ const DRAG_SLOP = 6;  // px a pointer may move and still count as a click / tap
    3. Infinite grid
    ========================================================================== */
 const grid = document.getElementById("grid");
-const pos = { x: 0, y: 0 };      // where the grid is now
-const target = { x: 0, y: 0 };   // where it is heading
+const pos = { x: 0, y: 0 };         // where the grid is now
+const target = { x: 0, y: 0 };      // where it is heading
 const drift = { x: -0.2, y: -0.1 }; // automatic movement (direction and speed)
 
 let cells = [];
 let wrapX;
 let wrapY;
 let dragging = false;
+
+// Picks a random image for every cell, never repeating the same image next to itself
+// (left, above, and across the edges where the grid wraps around)
+function layoutIndexes(rows, cols) {
+  const all = IMAGES.map((_, i) => i);
+  const layout = [];
+  for (let r = 0; r < rows; r++) {
+    layout[r] = [];
+    for (let c = 0; c < cols; c++) {
+      const banned = [
+        c > 0 ? layout[r][c - 1] : -1,        // left neighbour
+        r > 0 ? layout[r - 1][c] : -1,        // neighbour above
+        c === cols - 1 ? layout[r][0] : -1,   // wraps to the first column
+        r === rows - 1 ? layout[0][c] : -1,   // wraps to the first row
+      ];
+      const options = all.filter((i) => !banned.includes(i));
+      const pool = options.length ? options : all;
+      layout[r][c] = pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+  return layout;
+}
 
 // Builds a grid slightly bigger than the screen (1 extra row and column)
 function build() {
@@ -72,6 +96,7 @@ function build() {
   const imgSize = Math.round(cellW * (mobile ? IMG_RATIO_MOBILE : IMG_RATIO_DESKTOP));
   const cols = Math.ceil(innerWidth / cellW) + 1;
   const rows = Math.ceil(innerHeight / cellH) + 1;
+  const layout = layoutIndexes(rows, cols);
 
   // What leaves one side comes back in on the other
   wrapX = gsap.utils.wrap(-cellW, cols * cellW - cellW);
@@ -85,7 +110,7 @@ function build() {
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const index = (r * cols + c) % IMAGES.length;
+      const index = layout[r][c];
       const el = document.createElement("div");
       const image = document.createElement("img");
 
@@ -194,62 +219,15 @@ grid.addEventListener("pointerup", (e) => {
 
 
 /* ==========================================================================
-   4. Lightbox with magnifier
- 
-   - The cursor is a magnifying glass. Click (or tap) the picture to zoom in
-     once; click again to zoom back out.
-   - Zoomed in, move the mouse over the picture to look around.
-     On touch screens, drag with your finger instead.
-   - Close with the x button, Escape, or by clicking the background.
+   4. Full-screen viewer
    ========================================================================== */
 const lightbox = document.getElementById("lightbox");
 const stage = document.getElementById("lightboxStage");
-const frame = document.getElementById("lightboxFrame");
 const lightboxImg = document.getElementById("lightboxImg");
 const lightboxTitle = document.getElementById("lightboxTitle");
 const lightboxText = document.getElementById("lightboxText");
 
-let openToken = 0;               // stops a slow image from replacing a newer one
-let zoomed = false;
-let origin = { x: 0.5, y: 0.5 }; // which part of the picture is under the glass (0 to 1)
-let press = null;                // the pointer currently pressed on the frame
-
-const clamp01 = gsap.utils.clamp(0, 1);
-
-// Sizes the frame to the picture so the zoom stays inside the picture's edges
-function fitFrame() {
-  const w = lightboxImg.naturalWidth;
-  const h = lightboxImg.naturalHeight;
-  if (!w || !h) return;
-  const scale = Math.min((stage.clientWidth - PAD) / w, (stage.clientHeight - PAD) / h);
-  frame.style.width = Math.floor(w * scale) + "px";
-  frame.style.height = Math.floor(h * scale) + "px";
-}
-
-function applyZoom() {
-  lightboxImg.style.transformOrigin = `${origin.x * 100}% ${origin.y * 100}%`;
-  lightboxImg.style.transform = zoomed ? `scale(${ZOOM})` : "";
-  frame.classList.toggle("is-zoomed", zoomed);
-}
-
-// Points the glass at a screen position. The frame itself never moves, so its box is stable.
-function aimAt(clientX, clientY) {
-  const r = frame.getBoundingClientRect();
-  origin.x = clamp01((clientX - r.left) / r.width);
-  origin.y = clamp01((clientY - r.top) / r.height);
-}
-
-function toggleZoom(clientX, clientY) {
-  if (!zoomed) aimAt(clientX, clientY); // zoom in towards where you clicked
-  zoomed = !zoomed;
-  applyZoom();
-}
-
-function resetZoom() {
-  zoomed = false;
-  origin = { x: 0.5, y: 0.5 };
-  applyZoom();
-}
+let openToken = 0; // stops a slow image from replacing a newer one
 
 function openLightbox(index) {
   const item = IMAGES[index];
@@ -257,84 +235,37 @@ function openLightbox(index) {
 
   lightboxTitle.textContent = item.title;
   lightboxText.textContent = item.text;
-  resetZoom();
+  stage.scrollTop = 0;
+  lightbox.classList.remove("fit"); // always start at full width, no text
+  lightboxImg.classList.remove("ready");
 
-  // Show the thumbnail straight away, then swap in the large version once it has loaded
-  lightboxImg.src = item.thumb;
+  // Wait for the full image, then fade it in (a square thumb would make the layout jump)
   const big = new Image();
   big.onload = () => {
-    if (token === openToken) lightboxImg.src = item.full;
+    if (token !== openToken) return;
+    lightboxImg.src = item.full;
+    lightboxImg.classList.add("ready");
   };
   big.src = item.full;
 
   lightbox.classList.add("open");
   lightbox.setAttribute("aria-hidden", "false");
-  if (lightboxImg.complete) fitFrame();
 }
 
 function closeLightbox() {
   openToken++;
-  press = null;
   lightbox.classList.remove("open");
   lightbox.setAttribute("aria-hidden", "true");
-  resetZoom();
 }
 
-lightboxImg.addEventListener("load", fitFrame);
-
-// Mouse, finger and pen share the same handlers
-frame.addEventListener("pointerdown", (e) => {
-  if (e.pointerType === "mouse" && e.button !== 0) return;
-  press = { id: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
-  if (e.pointerType !== "mouse") frame.setPointerCapture(e.pointerId);
-});
-
-frame.addEventListener("pointermove", (e) => {
-  // Mouse: moving the glass over the picture looks around (no button needed)
-  if (e.pointerType === "mouse" && zoomed) {
-    aimAt(e.clientX, e.clientY);
-    applyZoom();
-  }
-
-  if (!press || e.pointerId !== press.id) return;
-  if (!press.moved && Math.hypot(e.clientX - press.startX, e.clientY - press.startY) < DRAG_SLOP) return;
-  press.moved = true;
-
-  // Touch / pen: dragging pans the zoomed picture
-  if (e.pointerType !== "mouse" && zoomed) {
-    const dx = e.clientX - press.lastX;
-    const dy = e.clientY - press.lastY;
-    origin.x = clamp01(origin.x - dx / (frame.clientWidth * (ZOOM - 1)));
-    origin.y = clamp01(origin.y - dy / (frame.clientHeight * (ZOOM - 1)));
-    applyZoom();
-  }
-  press.lastX = e.clientX;
-  press.lastY = e.clientY;
-});
-
-frame.addEventListener("pointerup", (e) => {
-  const p = press;
-  press = null;
-  if (!p || p.id !== e.pointerId || p.moved) return; // a drag is not a click
-  toggleZoom(e.clientX, e.clientY);
-});
-
-frame.addEventListener("pointercancel", () => {
-  press = null;
-});
-
-// Keyboard: Enter or Space zooms the centre of the picture
-frame.addEventListener("keydown", (e) => {
-  if (e.key !== "Enter" && e.key !== " ") return;
-  e.preventDefault();
-  const r = frame.getBoundingClientRect();
-  toggleZoom(r.left + r.width / 2, r.top + r.height / 2);
-});
-
-// Clicking the background or the x closes. The text panel and the picture do not.
+// Click: full width -> whole image with text -> back to the gallery
 lightbox.addEventListener("click", (e) => {
-  if (e.target.closest(".lb-side, .lb-frame")) return;
-  closeLightbox();
+  if (e.target.closest(".lb-side")) return; // lets you select the text without moving on
+  if (!lightbox.classList.contains("fit")) {
+    lightbox.classList.add("fit");
+  } else {
+    closeLightbox();
+  }
 });
 
 addEventListener("keydown", (e) => {
@@ -352,7 +283,6 @@ let resizeTimer;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    fitFrame();
     // Ignore small height changes: phone browsers show / hide their address bar while scrolling
     if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 150) return;
     lastW = innerWidth;
@@ -362,4 +292,3 @@ addEventListener("resize", () => {
 });
 
 build();
-

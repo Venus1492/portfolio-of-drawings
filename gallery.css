@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Gallery page only. Loaded after style.css (which has the header, tokens, etc.)
+   Gallery page only. Loaded after style.css (which has the header, colour
+   tokens, etc.)
    ========================================================================== */
 
 :root {
@@ -17,8 +18,15 @@ body {
   overflow: hidden;
 }
 
+/* In dark mode the ink drawings are inverted, in the grid and in the viewer */
+:root[data-theme="dark"] .cell img,
+:root[data-theme="dark"] .lb-stage img {
+  filter: invert(0.91);
+}
 
-/* 1. Infinite grid
+
+/* ==========================================================================
+   1. Infinite grid
    ========================================================================== */
 .grid {
   position: fixed;
@@ -60,21 +68,21 @@ body {
   opacity: 1;
 }
 
-:root[data-theme="dark"] .cell img {
-  filter: invert(0.91);
-}
 
-
-/* 2. Lightbox (full-screen viewer)
+/* ==========================================================================
+   2. Full-screen viewer
+   Phase 1 (.open): full width, scrollable, no text
+   Phase 2 (.open.fit): whole image on screen, text beside it
    ========================================================================== */
 .lightbox {
   position: fixed;
   inset: 0;
   z-index: 20;
   display: flex;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  touch-action: none;
+  cursor: pointer;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s, visibility 0s linear 0.3s;
@@ -86,22 +94,36 @@ body {
   transition: opacity 0.3s;
 }
 
-/* Title and text */
+/* The picture */
+.lb-stage {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.lb-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.3s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lb-stage img.ready {
+  opacity: 1;
+}
+
+/* The text: hidden until phase 2 */
 .lb-side {
-  display: flex;
-  flex: 0 0 240px;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 32px 24px;
-  touch-action: auto;
-  user-select: text;
-  -webkit-user-select: text;
+  display: none;
 }
 
 .lb-side h2 {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .lb-side p {
@@ -110,85 +132,37 @@ body {
   opacity: 0.75;
 }
 
-/* Image area. The frame is sized to the picture by gallery.js (see fitFrame). */
-.lb-stage {
-  position: relative;
-  display: grid;
-  flex: 1;
-  place-items: center;
-  min-width: 0;
-  min-height: 0;
-  padding: 16px; /* keep PAD in gallery.js in sync: 2 x this value */
-}
-
-/* The frame is the "window" the zoomed picture is clipped to */
-.lb-frame {
+/* Phase 2 */
+.lightbox.fit .lb-stage {
   overflow: hidden;
-  cursor: zoom-in; /* magnifying glass with + */
-  touch-action: none;
-  outline-offset: 4px;
 }
 
-.lb-frame.is-zoomed {
-  cursor: zoom-out; /* magnifying glass with - */
-}
-
-.lb-frame img {
-  display: block;
-  width: 100%;
+.lightbox.fit .lb-stage img {
   height: 100%;
+  padding: 16px;
   object-fit: contain;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-  will-change: transform;
-  transition: transform 0.3s ease; /* the zoom-in / zoom-out animation */
 }
 
-:root[data-theme="dark"] .lb-frame img {
-  filter: invert(0.91);
+.lightbox.fit .lb-side {
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 32px 24px;
+  cursor: default;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
-.lightbox .close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  z-index: 1;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
-  color: var(--text);
-  font: inherit;
-  font-size: 32px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.lightbox .close:hover {
-  color: var(--accent);
-}
-
-
-/* 3. Responsive
-   ========================================================================== */
-
-/* Phones: text goes under the picture */
+/* On phones the text goes under the image */
 @media (max-width: 700px) {
-  .lightbox {
+  .lightbox.fit {
     flex-direction: column-reverse;
   }
 
-  .lb-side {
+  .lightbox.fit .lb-side {
     flex: 0 0 auto;
-    max-height: 30vh;
     padding: 16px 20px 24px;
-    overflow-y: auto;
-  }
-
-  .lb-stage {
-    width: 100%;
-    padding: 12px;
   }
 }
