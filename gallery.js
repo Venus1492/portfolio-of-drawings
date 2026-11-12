@@ -1,3 +1,4 @@
+
 /* Gallery page: infinite draggable grid + full-screen viewer.
    Three phases, advanced by clicking:
      1. floating gallery
@@ -51,6 +52,7 @@ const IMG_RATIO_DESKTOP = 0.6; // thumbnail size as a share of its grid cell
 const IMG_RATIO_MOBILE = 0.75; // bigger on phones, where the cells are small
 
 const DRAG_SLOP = 6;  // px a pointer may move and still count as a click / tap
+const MOBILE_ZOOM = 1.5; // phones: how far past "fills the screen" the picture is scaled (1 = just fills it)
 
 
 /* ==========================================================================
@@ -228,10 +230,30 @@ const lightboxTitle = document.getElementById("lightboxTitle");
 const lightboxText = document.getElementById("lightboxText");
 
 let openToken = 0; // stops a slow image from replacing a newer one
+let openedAt = 0;  // when the viewer last opened (used to ignore the tap that opened it)
+
+// On phones the picture is scaled up beyond the screen so you can pan around it with a finger.
+// The size is passed to the CSS through --picture-w (on desktop it is removed: full width).
+function sizePicture(w = lightboxImg.naturalWidth, h = lightboxImg.naturalHeight) {
+  if (innerWidth >= MOBILE_BREAKPOINT || !w || !h) {
+    lightbox.style.removeProperty("--picture-w");
+    return;
+  }
+  const cover = Math.max(innerWidth / w, innerHeight / h); // smallest scale that fills the screen
+  lightboxImg.style.aspectRatio = `${w} / ${h}`;           // so its height is known straight away
+  lightbox.style.setProperty("--picture-w", Math.round(w * cover * MOBILE_ZOOM) + "px");
+}
+
+// Start in the middle of the picture instead of the top-left corner
+function centerPicture() {
+  stage.scrollLeft = (stage.scrollWidth - stage.clientWidth) / 2;
+  stage.scrollTop = (stage.scrollHeight - stage.clientHeight) / 2;
+}
 
 function openLightbox(index) {
   const item = IMAGES[index];
   const token = ++openToken;
+  openedAt = performance.now();
 
   lightboxTitle.textContent = item.title;
   lightboxText.textContent = item.text;
@@ -244,7 +266,9 @@ function openLightbox(index) {
   big.onload = () => {
     if (token !== openToken) return;
     lightboxImg.src = item.full;
+    sizePicture(big.naturalWidth, big.naturalHeight);
     lightboxImg.classList.add("ready");
+    if (innerWidth < MOBILE_BREAKPOINT) centerPicture();
   };
   big.src = item.full;
 
@@ -260,6 +284,7 @@ function closeLightbox() {
 
 // Click: full width -> whole image with text -> back to the gallery
 lightbox.addEventListener("click", (e) => {
+  if (performance.now() - openedAt < 500) return; // on touch, the tap that opened the viewer also "clicks" it
   if (e.target.closest(".lb-side")) return; // lets you select the text without moving on
   if (!lightbox.classList.contains("fit")) {
     lightbox.classList.add("fit");
@@ -283,6 +308,7 @@ let resizeTimer;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
+    if (lightbox.classList.contains("open")) sizePicture(); // e.g. the phone is rotated
     // Ignore small height changes: phone browsers show / hide their address bar while scrolling
     if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 150) return;
     lastW = innerWidth;
@@ -292,3 +318,5 @@ addEventListener("resize", () => {
 });
 
 build();
+
+
